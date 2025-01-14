@@ -366,7 +366,7 @@ def main():
                     "large_win_rate": st.slider("Large Win Rate (Pre-seed)", 0.0, 1.0, 0.02, 0.01),
                     "small_win_multiple": st.number_input("Small Win Multiple (Pre-seed)", min_value=1.0, value=4.0),
                     "medium_win_multiple": st.number_input("Medium Win Multiple (Pre-seed)", min_value=1.0, value=15.0),
-                    "large_win_multiple": st.number_input("Large Win Multiple (Pre-seed)", min_value=1.0, value=40.0)
+                    "large_win_multiple": st.number_input("Large Win Multiple (Pre-seed)", min_value=1.0, value=70.0)
                 }
 
             with col2:
@@ -379,7 +379,7 @@ def main():
                     "large_win_rate": st.slider("Large Win Rate (Seed)", 0.0, 1.0, 0.02, 0.01),
                     "small_win_multiple": st.number_input("Small Win Multiple (Seed)", min_value=1.0, value=3.0),
                     "medium_win_multiple": st.number_input("Medium Win Multiple (Seed)", min_value=1.0, value=10.0),
-                    "large_win_multiple": st.number_input("Large Win Multiple (Seed)", min_value=1.0, value=30.0)
+                    "large_win_multiple": st.number_input("Large Win Multiple (Seed)", min_value=1.0, value=50.0)
                 }
                 
             with col3:
@@ -392,7 +392,7 @@ def main():
                     "large_win_rate": st.slider("Large Win Rate (Series A)", 0.0, 1.0, 0.02, 0.01),
                     "small_win_multiple": st.number_input("Small Win Multiple (Series A)", min_value=1.0, value=2.5),
                     "medium_win_multiple": st.number_input("Medium Win Multiple (Series A)", min_value=1.0, value=8.0),
-                    "large_win_multiple": st.number_input("Large Win Multiple (Series A)", min_value=1.0, value=20.0)
+                    "large_win_multiple": st.number_input("Large Win Multiple (Series A)", min_value=1.0, value=30.0)
                 }
 
             with col4:
@@ -544,12 +544,12 @@ def main():
             
             with col1:
                 st.subheader("Pre-seed Parameters")
-                preseed_alpha = st.slider("Pre-seed Alpha", min_value=0.5, max_value=3.0, value=1.3, step=0.1)
+                preseed_alpha = st.slider("Pre-seed Alpha", min_value=0.5, max_value=3.0, value=1.5, step=0.1)
                 preseed_max_return = st.number_input("Pre-seed Max Return Multiple", min_value=1.0, value=150.0)
 
             with col2:
                 st.subheader("Seed Stage Parameters")
-                seed_alpha = st.slider("Seed Alpha", min_value=0.5, max_value=3.0, value=1.5, step=0.1)
+                seed_alpha = st.slider("Seed Alpha", min_value=0.5, max_value=3.0, value=1.8, step=0.1)
                 seed_max_return = st.number_input("Seed Max Return Multiple", min_value=1.0, value=100.0)
                 
             with col3:
