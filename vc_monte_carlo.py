@@ -15,68 +15,7 @@ class ExistingInvestment:
 
 class VCSimulator:
     def __init__(self):
-        self.existing_investments: List[ExistingInvestment] = []
-    
-    # def run_discrete_simulation(
-    #     self,
-    #     num_simulations: int,
-    #     total_capital: float,
-    #     num_companies: int,
-    #     min_investment: float,
-    #     max_investment: float,
-    #     preseed_params: Dict[str, float],
-    #     seed_params: Dict[str, float],
-    #     series_a_params: Dict[str, float],
-    #     series_b_params: Dict[str, float],
-    #     existing_investments: Optional[List[ExistingInvestment]] = None
-    # ):
-    #     results = []
-    #     for _ in range(num_simulations):
-    #         portfolio_value = 0
-    #         remaining_capital = total_capital
-            
-    #         # Include existing investments if provided
-    #         if existing_investments:
-    #             for investment in existing_investments:
-    #                 outcome = self._generate_discrete_outcome(
-    #                     investment.stage,
-    #                     preseed_params if investment.stage == "Pre-seed"
-    #                     else seed_params if investment.stage == "Seed"
-    #                     else series_a_params if investment.stage == "Series A"
-    #                     else series_b_params
-    #                 )
-    #                 portfolio_value += investment.amount * outcome
-    #                 remaining_capital -= investment.amount
-            
-    #         # Generate new investments
-    #         remaining_companies = num_companies - (len(existing_investments) if existing_investments else 0)
-    #         if remaining_companies > 0:
-    #             investment_size = remaining_capital / remaining_companies
-    #             investment_size = min(max(investment_size, min_investment), max_investment)
-                
-    #             for _ in range(remaining_companies):
-    #                  # Use allocation percentages to determine stage
-    #                 rand = np.random.random() * 100
-    #                 if rand < preseed_allocation:
-    #                     stage = "Pre-seed"
-    #                     params = preseed_params
-    #                 elif rand < preseed_allocation + seed_allocation:
-    #                     stage = "Seed"
-    #                     params = seed_params
-    #                 elif rand < preseed_allocation + seed_allocation + series_a_allocation:
-    #                     stage = "Series A"
-    #                     params = series_a_params
-    #                 else:
-    #                     stage = "Series B"
-    #                     params = series_b_params
-                    
-    #                 outcome = self._generate_discrete_outcome(stage, params)
-    #                 portfolio_value += investment_size * outcome
-            
-    #         moic = portfolio_value / total_capital
-    #         results.append(moic)
-            
-    #     return np.array(results)
+        self.existing_investments: List[ExistingInvestment] = []    
 
     def run_discrete_simulation(
         self,
@@ -86,70 +25,130 @@ class VCSimulator:
         min_investment: float,
         max_investment: float,
         allocations: Dict[str, float],
-        preseed_params: Dict[str, float],  # Add this
+        preseed_params: Dict[str, float],
         seed_params: Dict[str, float],
         series_a_params: Dict[str, float],
-        series_b_params: Dict[str, float],  # Add this
-        existing_investments: Optional[List[ExistingInvestment]] = None
-    ):
+        series_b_params: Dict[str, float],
+        preseed_followon_pct: float,
+        seed_followon_pct: float,
+        series_a_followon_pct: float,
+        preseed_followon_size: float,
+        seed_followon_size: float, 
+        series_a_followon_size: float,
+        followon_reserve_pct: float,
+        existing_investments: Optional[List[ExistingInvestment]] = None):
+        
         results = []
-        stage_params = {
-            "Pre-seed": preseed_params,
-            "Seed": seed_params,
-            "Series A": series_a_params,
-            "Series B": series_b_params
-        }
+        investment_counts = []
+        all_investment_counts = []
+        total_investments = num_companies
+        remaining_reserve = total_capital * (followon_reserve_pct/100)
 
         for _ in range(num_simulations):
             portfolio_value = 0
             remaining_capital = total_capital
-            
+            total_invested = 0
+            total_investments = 0
+            total_followons = 0
+            current_reserve = remaining_reserve
+           
             # Include existing investments if provided
             if existing_investments:
                 for investment in existing_investments:
-                    outcome = self._generate_discrete_outcome(
-                        investment.stage,
-                        stage_params[investment.stage]
-                    )
+                    params = {
+                        "Pre-seed": preseed_params,
+                        "Seed": seed_params,
+                        "Series A": series_a_params,
+                        "Series B": series_b_params
+                    }[investment.stage]
+                    outcome = self._generate_discrete_outcome(investment.stage, params)
                     portfolio_value += investment.amount * outcome
                     remaining_capital -= investment.amount
+                    total_invested += investment.amount
+                    total_investments += 1
+
+            # Calculate number of companies per stage
+            preseed_companies = int(num_companies * allocations['preseed'] / 100)
+            seed_companies = int(num_companies * allocations['seed'] / 100)
+            series_a_companies = int(num_companies * allocations['series_a'] / 100)
+            series_b_companies = int(num_companies * allocations['series_b'] / 100)
             
-            # Generate new investments
-            remaining_companies = num_companies - (len(existing_investments) if existing_investments else 0)
-            if remaining_companies > 0:
-                investment_size = remaining_capital / remaining_companies
-                investment_size = min(max(investment_size, min_investment), max_investment)
-                
-                # Calculate number of companies per stage
-                preseed_companies = int(remaining_companies * allocations['preseed'] / 100)
-                seed_companies = int(remaining_companies * allocations['seed'] / 100)
-                series_a_companies = int(remaining_companies * allocations['series_a'] / 100)
-                series_b_companies = int(remaining_companies * allocations['series_b'] / 100)
-                
-                # Pre-seed investments
-                for _ in range(preseed_companies):
-                    outcome = self._generate_discrete_outcome("Pre-seed", preseed_params)
-                    portfolio_value += investment_size * outcome
-                
-                # Seed investments
-                for _ in range(seed_companies):
-                    outcome = self._generate_discrete_outcome("Seed", seed_params)
-                    portfolio_value += investment_size * outcome
-                
-                # Series A investments
-                for _ in range(series_a_companies):
-                    outcome = self._generate_discrete_outcome("Series A", series_a_params)
-                    portfolio_value += investment_size * outcome
-                
-                # Series B investments
-                for _ in range(series_b_companies):
-                    outcome = self._generate_discrete_outcome("Series B", series_b_params)
-                    portfolio_value += investment_size * outcome
-            
-            moic = portfolio_value / total_capital
-            results.append(moic)
-            
-        return np.array(results)
+            # Initial investment size per company
+            investment_size = remaining_capital / num_companies
+            investment_size = min(max(investment_size, min_investment), max_investment)
+           
+            # Pre-seed investments with follow-ons
+            for _ in range(preseed_companies):
+               outcome = self.simulate_with_followon(
+                   stage="Pre-seed",
+                   params=preseed_params,
+                   followon_pct=preseed_followon_pct,
+                   followon_size=preseed_followon_size,
+                   initial_amount=investment_size,
+                   remaining_reserve=current_reserve,
+                   next_stage_params=seed_params
+               )
+               portfolio_value += outcome['total_return']
+               total_invested += outcome['total_invested']
+               current_reserve = outcome['remaining_reserve']
+               total_investments += outcome['num_investments']
+               if outcome['made_followon']:
+                    total_followons += 1
+           
+           # Seed investments with follow-ons
+            for _ in range(seed_companies):
+               outcome = self.simulate_with_followon(
+                   stage="Seed",
+                   params=seed_params,
+                   followon_pct=seed_followon_pct,
+                   followon_size=seed_followon_size,
+                   initial_amount=investment_size,
+                   remaining_reserve=current_reserve,
+                   next_stage_params=series_a_params
+               )
+               portfolio_value += outcome['total_return']
+               total_invested += outcome['total_invested']
+               current_reserve = outcome['remaining_reserve']
+               total_investments += outcome['num_investments']
+               if outcome['made_followon']:
+                    total_followons += 1
+           
+           # Series A investments with follow-ons
+            for _ in range(series_a_companies):
+               outcome = self.simulate_with_followon(
+                   stage="Series A",
+                   params=series_a_params,
+                   followon_pct=series_a_followon_pct,
+                   followon_size=series_a_followon_size,
+                   initial_amount=investment_size,
+                   remaining_reserve=current_reserve,
+                   next_stage_params=series_b_params
+               )
+               portfolio_value += outcome['total_return']
+               total_invested += outcome['total_invested']
+               current_reserve = outcome['remaining_reserve']
+               total_investments += outcome['num_investments']
+               if outcome['made_followon']:
+                    total_followons += 1
+           
+           # Series B investments (no follow-ons)
+            for _ in range(series_b_companies):
+               outcome = self._generate_discrete_outcome("Series B", series_b_params)
+               investment_return = investment_size * outcome
+               portfolio_value += investment_return
+               total_invested += investment_size
+               total_investments += 1
+
+            investment_counts.append({
+                'simulation': len(investment_counts) + 1,  # Add simulation number
+                'total_investments': total_investments,
+                'total_followons': total_followons
+            })  
+
+            moic = portfolio_value / total_invested if total_invested > 0 else 0
+            results.append(moic)  
+
+        return np.array(results), investment_counts, total_investments
 
     def _generate_discrete_outcome(self, stage: str, params: Dict[str, float]) -> float:
         """Generate outcome based on discrete probability distribution"""
@@ -163,7 +162,37 @@ class VCSimulator:
         return np.random.choice(
             list(outcomes.keys()),
             p=list(outcomes.values())
-        )    
+        )
+
+    def simulate_with_followon(self, stage: str, params: Dict[str, float], followon_pct: float,
+                             followon_size: float, initial_amount: float,
+                             remaining_reserve: float, next_stage_params: Dict[str, float]) -> Dict:
+        initial_outcome = self._generate_discrete_outcome(stage, params)
+        total_invested = initial_amount
+        total_return = initial_amount * initial_outcome
+        num_investments = 1  # Count initial investment
+        made_followon = False
+        
+        followon_amount = initial_amount * followon_size
+        if (initial_outcome > 0 and 
+            np.random.random() < (followon_pct / 100) and 
+            remaining_reserve >= followon_amount):
+
+            followon_outcome = self._generate_discrete_outcome(stage, next_stage_params)
+            total_invested += followon_amount
+            total_return += followon_amount * followon_outcome
+            remaining_reserve -= followon_amount
+            num_investments += 1  # Count follow-on investment
+            made_followon = True
+        
+        return {
+            'total_invested': total_invested,
+            'total_return': total_return,
+            'multiple': total_return / total_invested,
+            'remaining_reserve': remaining_reserve,
+            'num_investments': num_investments,
+            'made_followon': made_followon
+        }
 
     def run_power_law_simulation(
         self,
@@ -177,15 +206,32 @@ class VCSimulator:
         series_a_alpha: float,
         seed_max_return: float,
         series_a_max_return: float,
+        followon_reserve_pct: float,
+        preseed_followon_pct: float,
+        seed_followon_pct: float,
+        series_a_followon_pct: float,
+        preseed_followon_size: float,  # Add this
+        seed_followon_size: float,     # Add this
+        series_a_followon_size: float, # Add this 
         existing_investments: Optional[List[ExistingInvestment]] = None
-    ):
+        ):
         results = []
+        investment_counts = []
+        total_investments = num_companies
+        all_investment_counts = []
+        remaining_reserve = total_capital * (followon_reserve_pct/100)
+ 
         for _ in range(num_simulations):
             portfolio_value = 0
             remaining_capital = total_capital
-            
-            # Include existing investments if provided
+            total_invested = 0  # Initialize here before first use
+            total_investments = 0
+            total_followons = 0
+            current_reserve = remaining_reserve
+
+            # Handle existing investments
             if existing_investments:
+                total_investments += len(existing_investments)
                 for investment in existing_investments:
                     outcome = self._generate_power_law_outcome(
                         investment.stage,
@@ -194,40 +240,90 @@ class VCSimulator:
                     )
                     portfolio_value += investment.amount * outcome
                     remaining_capital -= investment.amount
-            
-            # Generate new investments
-            remaining_companies = num_companies - (len(existing_investments) if existing_investments else 0)
-            if remaining_companies > 0:
-                investment_size = remaining_capital / remaining_companies
-                investment_size = min(max(investment_size, min_investment), max_investment)
-                
-                # Calculate number of companies per stage based on allocations
-                preseed_companies = int(remaining_companies * allocations['preseed'] / 100)
-                seed_companies = int(remaining_companies * allocations['seed'] / 100)
-                series_a_companies = int(remaining_companies * allocations['series_a'] / 100)
-                series_b_companies = int(remaining_companies * allocations['series_b'] / 100)
-                
-                # Simulate each stage
-                for _ in range(preseed_companies):
-                    outcome = self._generate_power_law_outcome("Pre-seed", seed_alpha, seed_max_return * 1.5)
-                    portfolio_value += investment_size * outcome
-                    
-                for _ in range(seed_companies):
-                    outcome = self._generate_power_law_outcome("Seed", seed_alpha, seed_max_return)
-                    portfolio_value += investment_size * outcome
-                    
-                for _ in range(series_a_companies):
-                    outcome = self._generate_power_law_outcome("Series A", series_a_alpha, series_a_max_return)
-                    portfolio_value += investment_size * outcome
-                    
-                for _ in range(series_b_companies):
-                    outcome = self._generate_power_law_outcome("Series B", series_a_alpha, series_a_max_return * 0.5)
-                    portfolio_value += investment_size * outcome
-            
+                    total_investments += 1
+                    total_invested += investment.amount
+
+            # Calculate companies per stage
+            preseed_companies = int(num_companies * allocations['preseed'] / 100)
+            seed_companies = int(num_companies * allocations['seed'] / 100)
+            series_a_companies = int(num_companies * allocations['series_a'] / 100)
+            series_b_companies = int(num_companies * allocations['series_b'] / 100)
+
+            investment_size = remaining_capital / num_companies
+            investment_size = min(max(investment_size, min_investment), max_investment)
+
+            # Pre-seed with follow-ons
+            for _ in range(preseed_companies):
+                initial_outcome = self._generate_power_law_outcome("Pre-seed", seed_alpha, seed_max_return * 1.5)
+                portfolio_value += investment_size * initial_outcome
+                total_invested += investment_size
+                total_investments += 1
+
+                # Handle follow-on
+                if (initial_outcome > 1.0 and 
+                    np.random.random() < (preseed_followon_pct / 100) and 
+                    current_reserve >= investment_size * preseed_followon_size):
+                    followon_outcome = self._generate_power_law_outcome("Seed", seed_alpha, seed_max_return)
+                    followon_amount = investment_size * preseed_followon_size
+                    portfolio_value += followon_amount * followon_outcome
+                    current_reserve -= followon_amount
+                    total_invested += followon_amount
+                    total_investments += 1
+                    total_followons += 1
+
+            # Seed with follow-ons
+            for _ in range(seed_companies):
+                initial_outcome = self._generate_power_law_outcome("Seed", seed_alpha, seed_max_return)
+                portfolio_value += investment_size * initial_outcome
+                total_invested += investment_size
+                total_investments += 1
+
+                if (initial_outcome > 1.0 and 
+                    np.random.random() < (seed_followon_pct / 100) and 
+                    current_reserve >= investment_size * seed_followon_size):
+                    followon_outcome = self._generate_power_law_outcome("Series A", series_a_alpha, series_a_max_return)
+                    followon_amount = investment_size * seed_followon_size
+                    portfolio_value += followon_amount * followon_outcome
+                    current_reserve -= followon_amount
+                    total_invested += followon_amount
+                    total_investments += 1
+                    total_followons += 1
+
+            # Series A with follow-ons
+            for _ in range(series_a_companies):
+                initial_outcome = self._generate_power_law_outcome("Series A", series_a_alpha, series_a_max_return)
+                portfolio_value += investment_size * initial_outcome
+                total_invested += investment_size
+                total_investments += 1
+
+                if (initial_outcome > 1.0 and 
+                    np.random.random() < (series_a_followon_pct / 100) and 
+                    current_reserve >= investment_size * series_a_followon_size):
+                    followon_outcome = self._generate_power_law_outcome("Series B", series_a_alpha, series_a_max_return * 0.5)
+                    followon_amount = investment_size * series_a_followon_size
+                    portfolio_value += followon_amount * followon_outcome
+                    current_reserve -= followon_amount
+                    total_invested += followon_amount
+                    total_investments += 1
+                    total_followons += 1
+
+            # Series B (no follow-ons)
+            for _ in range(series_b_companies):
+                outcome = self._generate_power_law_outcome("Series B", series_a_alpha, series_a_max_return * 0.5)
+                portfolio_value += investment_size * outcome
+                total_invested += investment_size
+                total_investments += 1
+
+            investment_counts.append({
+                'simulation': len(investment_counts) + 1,  # Add simulation number
+                'total_investments': total_investments,
+                'total_followons': total_followons
+            })
+
             moic = portfolio_value / total_capital
             results.append(moic)
-            
-        return np.array(results)
+
+        return np.array(results), investment_counts, total_investments
     
     def _generate_power_law_outcome(self, stage: str, alpha: float, max_return: float) -> float:
         """Generate outcome based on power law distribution"""
@@ -244,13 +340,17 @@ def main():
     num_companies = st.sidebar.number_input(
         "Total Number of Companies",
         min_value=1,
-        max_value=100,
+        max_value=401,
         value=30,
         step=1
     )
-    total_capital = st.sidebar.number_input("Total Capital (€)", min_value=1, value=20000000, step=1000000)
-    min_investment = st.sidebar.number_input("Minimum Investment (€)", min_value=1, value=250000, step=50000)
-    max_investment = st.sidebar.number_input("Maximum Investment (€)", min_value=1, value=3000000, step=100000)
+    total_capital = st.sidebar.number_input("Total Capital", min_value=1, value=20000000, step=1000000)
+#
+    followon_reserve_pct = st.sidebar.number_input("% of Total Capital Reserved for Follow-ons", min_value=0, max_value=50, value=30,step=5)
+    followon_reserve = total_capital * (followon_reserve_pct/100)
+#
+    min_investment = st.sidebar.number_input("Minimum Investment", min_value=1, value=250000, step=50000)
+    max_investment = st.sidebar.number_input("Maximum Investment", min_value=1, value=3000000, step=100000)
     num_simulations = st.sidebar.number_input("Number of Simulations", min_value=100, value=1000, step=100)
     
     # Existing investments section
@@ -270,7 +370,7 @@ def main():
             "Pre-seed Allocation (%)", 
             min_value=0, 
             max_value=100, 
-            value=20,
+            value=50,
             step=5,
             key="preseed_alloc"
         )
@@ -288,7 +388,7 @@ def main():
             "Series A Allocation (%)", 
             min_value=0, 
             max_value=100, 
-            value=30,
+            value=20,
             step=5,
             key="series_a_alloc"
         )
@@ -297,12 +397,75 @@ def main():
             "Series B Allocation (%)", 
             min_value=0, 
             max_value=100, 
-            value=20,
+            value=0,
             step=5,
             key="series_b_alloc"
         )
         
         total_allocation = preseed_allocation + seed_allocation + series_a_allocation + series_b_allocation
+    
+    # After stage allocation, add follow-on section
+    st.header("Follow-on Strategy")
+    st.markdown(f"Reserved for follow-ons: ${followon_reserve:,.0f}")
+    follow_col1, follow_col2 = st.columns(2)
+    
+    with follow_col1:
+        # Follow-on percentages for each stage
+        preseed_followon_pct = st.number_input(
+            "Pre-seed Follow-on % (% of companies that get follow-on)", 
+            min_value=0, 
+            max_value=100, 
+            value=50,
+            step=10,
+            key="preseed_followon_pct"
+        )
+        
+        seed_followon_pct = st.number_input(
+            "Seed Follow-on %", 
+            min_value=0, 
+            max_value=100, 
+            value=20,
+            step=10,
+            key="seed_followon_pct"
+        )
+        
+        series_a_followon_pct = st.number_input(
+            "Series A Follow-on %", 
+            min_value=0, 
+            max_value=100, 
+            value=0,
+            step=10,
+            key="series_a_followon_pct"
+        )
+
+    with follow_col2:
+        # Follow-on check sizes
+        preseed_followon_size = st.number_input(
+            "Pre-seed Follow-on Size Multiple (x initial check)", 
+            min_value=0.0, 
+            max_value=5.0, 
+            value=1.0,
+            step=0.5,
+            key="preseed_followon_size"
+        )
+        
+        seed_followon_size = st.number_input(
+            "Seed Follow-on Size Multiple", 
+            min_value=0.0, 
+            max_value=5.0, 
+            value=1.0,
+            step=0.5,
+            key="seed_followon_size"
+        )
+        
+        series_a_followon_size = st.number_input(
+            "Series A Follow-on Size Multiple", 
+            min_value=0.0, 
+            max_value=5.0, 
+            value=1.0,
+            step=0.5,
+            key="series_a_followon_size"
+        )    
     
     with col_alloc2:
             st.markdown("### Allocation Summary")
@@ -368,6 +531,10 @@ def main():
                     "medium_win_multiple": st.number_input("Medium Win Multiple (Pre-seed)", min_value=1.0, value=15.0),
                     "large_win_multiple": st.number_input("Large Win Multiple (Pre-seed)", min_value=1.0, value=70.0)
                 }
+                # Calculate total and display with color
+                preseed_total = sum([preseed_params[k] for k in ["loss_rate", "sideways_rate", "small_win_rate", "medium_win_rate", "large_win_rate"]])
+                total_color = "green" if abs(preseed_total - 1.0) < 0.001 else "red"
+                st.markdown(f"**Total: <span style='color: {total_color}'>{preseed_total:.0%}</span>**", unsafe_allow_html=True)
 
             with col2:
                 st.subheader("Seed Stage Parameters")
@@ -381,6 +548,10 @@ def main():
                     "medium_win_multiple": st.number_input("Medium Win Multiple (Seed)", min_value=1.0, value=10.0),
                     "large_win_multiple": st.number_input("Large Win Multiple (Seed)", min_value=1.0, value=50.0)
                 }
+                # Calculate total and display with color
+                seed_total = sum([seed_params[k] for k in ["loss_rate", "sideways_rate", "small_win_rate", "medium_win_rate", "large_win_rate"]])
+                total_color = "green" if abs(seed_total - 1.0) < 0.001 else "red"
+                st.markdown(f"**Total: <span style='color: {total_color}'>{seed_total:.0%}</span>**", unsafe_allow_html=True)
                 
             with col3:
                 st.subheader("Series A Parameters")
@@ -394,6 +565,10 @@ def main():
                     "medium_win_multiple": st.number_input("Medium Win Multiple (Series A)", min_value=1.0, value=8.0),
                     "large_win_multiple": st.number_input("Large Win Multiple (Series A)", min_value=1.0, value=30.0)
                 }
+                # Calculate total and display with color
+                series_a_total = sum([series_a_params[k] for k in ["loss_rate", "sideways_rate", "small_win_rate", "medium_win_rate", "large_win_rate"]])
+                total_color = "green" if abs(series_a_total - 1.0) < 0.001 else "red"
+                st.markdown(f"**Total: <span style='color: {total_color}'>{series_a_total:.0%}</span>**", unsafe_allow_html=True)
 
             with col4:
                 st.subheader("Series B Parameters")
@@ -407,36 +582,41 @@ def main():
                     "medium_win_multiple": st.number_input("Medium Win Multiple (Series B)", min_value=1.0, value=5.0),
                     "large_win_multiple": st.number_input("Large Win Multiple (Series B)", min_value=1.0, value=10.0)
                 }    
+                # Calculate total and display with color
+                series_b_total = sum([series_b_params[k] for k in ["loss_rate", "sideways_rate", "small_win_rate", "medium_win_rate", "large_win_rate"]])
+                total_color = "green" if abs(series_b_total - 1.0) < 0.001 else "red"
+                st.markdown(f"**Total: <span style='color: {total_color}'>{series_b_total:.0%}</span>**", unsafe_allow_html=True)
             
-            # num_companies = st.slider("Number of Companies", 
-            #                         min_value=max(len(existing_investments), 1), 
-            #                         max_value=50, 
-            #                         value=10)
-            
+            # Follow-on section
             if st.button("Run Discrete Simulation", key="run_discrete_sim"):
-                if total_allocation != 100:
-                    st.error("Please adjust allocations to total 100% before running simulation")
-                else:
-                    allocations = {
-                        'preseed': preseed_allocation,
-                        'seed': seed_allocation,
-                        'series_a': series_a_allocation,
-                        'series_b': series_b_allocation
-                    }
-                    results = simulator.run_discrete_simulation(
+                allocations = {
+                'preseed': preseed_allocation,
+                'seed': seed_allocation,
+                'series_a': series_a_allocation,
+                'series_b': series_b_allocation
+                }
+                if total_allocation == 100:
+                    results, investment_counts, total_investments  = simulator.run_discrete_simulation(
                         num_simulations=num_simulations,
                         total_capital=total_capital,
                         num_companies=num_companies,
                         min_investment=min_investment,
                         max_investment=max_investment,
                         allocations=allocations,
-                        preseed_params=preseed_params,  # Add this
+                        preseed_params=preseed_params,
                         seed_params=seed_params,
                         series_a_params=series_a_params,
-                        series_b_params=series_b_params,  # Add this
+                        series_b_params=series_b_params,
+                        preseed_followon_pct=preseed_followon_pct,
+                        seed_followon_pct=seed_followon_pct,
+                        series_a_followon_pct=series_a_followon_pct,
+                        preseed_followon_size=preseed_followon_size,
+                        seed_followon_size=seed_followon_size,
+                        series_a_followon_size=series_a_followon_size,
+                        followon_reserve_pct=followon_reserve_pct,
                         existing_investments=existing_investments if existing_investments else None
-                    )
-                
+                    )        
+
                 mean_moic = np.mean(results)
                 median_moic = np.median(results)
                 percentile_95 = np.percentile(results, 95)
@@ -462,16 +642,16 @@ def main():
                 success_rate = np.mean(results >= 4.0) * 100
                 st.metric("Probability of Achieving 4.0x MOIC", f"{success_rate:.1f}%")
 
-            # Export simulation results
                 results_df = pd.DataFrame({
                     'simulation': range(1, len(results) + 1),
                     'moic': results,
                     'achieved_target': results >= 4.0,
                     'portfolio_value': results * total_capital,
                     'num_companies': num_companies,
-                    'total_capital': total_capital
+                    'total_investments': [count['total_investments'] for count in investment_counts],
+                    'total_followons': [count['total_followons'] for count in investment_counts]
                 })
-                
+      
                 # Add existing portfolio details if any
                 if existing_investments:
                     results_df['num_existing_investments'] = len(existing_investments)
@@ -481,18 +661,11 @@ def main():
                     results_df['existing_portfolio_value'] = 0
                 
                 # Add model-specific parameters
-                if tab1:  # Discrete Model
-                    results_df['model_type'] = 'Discrete'
-                    results_df['seed_loss_rate'] = seed_params['loss_rate']
-                    results_df['seed_large_win_rate'] = seed_params['large_win_rate']
-                    results_df['series_a_loss_rate'] = series_a_params['loss_rate']
-                    results_df['series_a_large_win_rate'] = series_a_params['large_win_rate']
-                else:  # Power Law Model
-                    results_df['model_type'] = 'Power Law'
-                    results_df['seed_alpha'] = seed_alpha
-                    results_df['series_a_alpha'] = series_a_alpha
-                    results_df['seed_max_return'] = seed_max_return
-                    results_df['series_a_max_return'] = series_a_max_return
+                results_df['model_type'] = 'Discrete'
+                results_df['seed_loss_rate'] = seed_params['loss_rate']
+                results_df['seed_large_win_rate'] = seed_params['large_win_rate']
+                results_df['series_a_loss_rate'] = series_a_params['loss_rate']
+                results_df['series_a_large_win_rate'] = series_a_params['large_win_rate']
                 
                 # Create summary statistics
                 summary_df = pd.DataFrame([{
@@ -504,6 +677,8 @@ def main():
                     'num_simulations': num_simulations,
                     'total_capital': total_capital,
                     'num_companies': num_companies,
+                    'avg_total_investments': np.mean([count['total_investments'] for count in investment_counts]),
+                    'avg_followons': np.mean([count['total_followons'] for count in investment_counts]),
                     'num_existing_investments': len(existing_investments) if existing_investments else 0
                 }])
                 
@@ -544,25 +719,31 @@ def main():
             
             with col1:
                 st.subheader("Pre-seed Parameters")
-                preseed_alpha = st.slider("Pre-seed Alpha", min_value=0.5, max_value=3.0, value=1.5, step=0.1)
-                preseed_max_return = st.number_input("Pre-seed Max Return Multiple", min_value=1.0, value=150.0)
+                preseed_alpha = st.slider("Pre-seed Alpha", min_value=0.5, max_value=3.0, value=1.7, step=0.1)
+                preseed_max_return = st.number_input("Pre-seed Max Return Multiple", min_value=1.0, value=100.0)
 
             with col2:
                 st.subheader("Seed Stage Parameters")
-                seed_alpha = st.slider("Seed Alpha", min_value=0.5, max_value=3.0, value=1.8, step=0.1)
-                seed_max_return = st.number_input("Seed Max Return Multiple", min_value=1.0, value=100.0)
+                seed_alpha = st.slider("Seed Alpha", min_value=0.5, max_value=3.0, value=1.9, step=0.1)
+                seed_max_return = st.number_input("Seed Max Return Multiple", min_value=1.0, value=75.0)
                 
             with col3:
                 st.subheader("Series A Parameters")
-                series_a_alpha = st.slider("Series A Alpha", min_value=0.5, max_value=3.0, value=2.0, step=0.1)
-                series_a_max_return = st.number_input("Series A Max Return Multiple", min_value=1.0, value=50.0)
+                series_a_alpha = st.slider("Series A Alpha", min_value=0.5, max_value=3.0, value=2.1, step=0.1)
+                series_a_max_return = st.number_input("Series A Max Return Multiple", min_value=1.0, value=20.0)
             
             with col4:
                 st.subheader("Series B Parameters")
                 series_b_alpha = st.slider("Series B Alpha", min_value=0.5, max_value=3.0, value=2.5, step=0.1)
-                series_b_max_return = st.number_input("Series B Max Return Multiple", min_value=1.0, value=20.0)
+                series_b_max_return = st.number_input("Series B Max Return Multiple", min_value=1.0, value=5.0)
             
-            if st.button("Run Power Law Simulation", key="run_power_law_sim"):
+            if st.button("Run Power Law Simulation", key="run_power_law_sim"):   
+                allocations = {
+                'preseed': preseed_allocation,
+                'seed': seed_allocation,
+                'series_a': series_a_allocation,
+                'series_b': series_b_allocation
+            }
                 if total_allocation != 100:
                     st.error("Please adjust allocations to total 100% before running simulation")
                 else:
@@ -572,17 +753,24 @@ def main():
                         'series_a': series_a_allocation,
                         'series_b': series_b_allocation
                     }
-                    results = simulator.run_power_law_simulation(
+                    results, investment_counts, total_investments = simulator.run_power_law_simulation(
                         num_simulations=num_simulations,
                         total_capital=total_capital,
                         num_companies=num_companies,
                         min_investment=min_investment,
                         max_investment=max_investment,
-                        allocations=allocations,  # Add this
+                        allocations=allocations,
                         seed_alpha=seed_alpha,
                         series_a_alpha=series_a_alpha,
                         seed_max_return=seed_max_return,
                         series_a_max_return=series_a_max_return,
+                        preseed_followon_pct=preseed_followon_pct,
+                        seed_followon_pct=seed_followon_pct,
+                        series_a_followon_pct=series_a_followon_pct,
+                        followon_reserve_pct=followon_reserve_pct,
+                        preseed_followon_size=preseed_followon_size,   # Add this
+                        seed_followon_size=seed_followon_size,         # Add this
+                        series_a_followon_size=series_a_followon_size, # Add this
                         existing_investments=existing_investments if existing_investments else None
                     )
 
@@ -596,7 +784,7 @@ def main():
                 col2.metric("Median MOIC", f"{median_moic:.2f}x")
                 col3.metric("95th Percentile", f"{percentile_95:.2f}x")
                 col4.metric("5th Percentile", f"{percentile_5:.2f}x")
-                
+
                 fig = go.Figure()
                 fig.add_trace(go.Histogram(x=results, nbinsx=50, name="MOIC Distribution"))
                 fig.add_vline(x=4.0, line_dash="dash", line_color="red", annotation_text="Target 4.0x")
@@ -611,16 +799,17 @@ def main():
                 success_rate = np.mean(results >= 4.0) * 100
                 st.metric("Probability of Achieving 4.0x MOIC", f"{success_rate:.1f}%")
 
-            # Export simulation results
                 results_df = pd.DataFrame({
                     'simulation': range(1, len(results) + 1),
                     'moic': results,
                     'achieved_target': results >= 4.0,
                     'portfolio_value': results * total_capital,
                     'num_companies': num_companies,
-                    'total_capital': total_capital
+                    'total_capital': total_capital,
+                    'total_investments': [count['total_investments'] for count in investment_counts],
+                    'total_followons': [count['total_followons'] for count in investment_counts]
                 })
-                
+
                 # Add existing portfolio details if any
                 if existing_investments:
                     results_df['num_existing_investments'] = len(existing_investments)
@@ -630,18 +819,11 @@ def main():
                     results_df['existing_portfolio_value'] = 0
                 
                 # Add model-specific parameters
-                if tab1:  # Discrete Model
-                    results_df['model_type'] = 'Discrete'
-                    results_df['seed_loss_rate'] = seed_params['loss_rate']
-                    results_df['seed_large_win_rate'] = seed_params['large_win_rate']
-                    results_df['series_a_loss_rate'] = series_a_params['loss_rate']
-                    results_df['series_a_large_win_rate'] = series_a_params['large_win_rate']
-                else:  # Power Law Model
-                    results_df['model_type'] = 'Power Law'
-                    results_df['seed_alpha'] = seed_alpha
-                    results_df['series_a_alpha'] = series_a_alpha
-                    results_df['seed_max_return'] = seed_max_return
-                    results_df['series_a_max_return'] = series_a_max_return
+                results_df['model_type'] = 'Power Law'
+                results_df['seed_alpha'] = seed_alpha
+                results_df['series_a_alpha'] = series_a_alpha
+                results_df['seed_max_return'] = seed_max_return
+                results_df['series_a_max_return'] = series_a_max_return
                 
                 # Create summary statistics
                 summary_df = pd.DataFrame([{
@@ -653,6 +835,8 @@ def main():
                     'num_simulations': num_simulations,
                     'total_capital': total_capital,
                     'num_companies': num_companies,
+                    'avg_total_investments': np.mean([count['total_investments'] for count in investment_counts]),
+                    'avg_followons': np.mean([count['total_followons'] for count in investment_counts]),
                     'num_existing_investments': len(existing_investments) if existing_investments else 0
                 }])
                 
