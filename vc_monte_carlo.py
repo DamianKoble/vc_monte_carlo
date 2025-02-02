@@ -334,7 +334,7 @@ class VCSimulator:
 def main():
     st.set_page_config(layout="wide")
     st.title("VC Portfolio Monte Carlo Simulator")
-    st.caption("This application is designed to test your venture capital portfolio assumptions. Below you will find two different models, Discrete and Powerlaw. Discrete relies on your assumptions, e.g., what is a 'win' at pre-seed and how much should that return. The Powerlaw model is perhaps more accurate in the real world.")
+    st.caption("This application is designed to test your venture capital portfolio assumptions. Below you will find two different models, discrete and power law. Discrete relies on your assumptions, e.g., what is a 'win' at pre-seed, and how much should that return? The power law model is perhaps more accurate in the real world.")
     
     # Sidebar for common parameters
     st.sidebar.header("Portfolio Parameters")
@@ -525,14 +525,14 @@ def main():
             with col1:
                 st.subheader("Pre-seed Parameters")
                 preseed_params = {
-                    "loss_rate": st.slider("Loss Rate (Pre-seed)", 0.0, 1.0, 0.5, 0.01),
-                    "sideways_rate": st.slider("Sideways Rate (Pre-seed)", 0.0, 1.0, 0.25, 0.01),
-                    "small_win_rate": st.slider("Small Win Rate (Pre-seed)", 0.0, 1.0, 0.15, 0.01),
-                    "medium_win_rate": st.slider("Medium Win Rate (Pre-seed)", 0.0, 1.0, 0.09, 0.01),
-                    "large_win_rate": st.slider("Large Win Rate (Pre-seed)", 0.0, 1.0, 0.01, 0.01),
-                    "small_win_multiple": st.number_input("Small Win Multiple (Pre-seed)", min_value=1.0, value=4.0),
-                    "medium_win_multiple": st.number_input("Medium Win Multiple (Pre-seed)", min_value=1.0, value=15.0),
-                    "large_win_multiple": st.number_input("Large Win Multiple (Pre-seed)", min_value=1.0, value=100.0)
+                    "loss_rate": st.slider("Loss Rate % (Pre-seed)", 0.0, 1.0, 0.6, 0.01),
+                    "sideways_rate": st.slider("Sideways Rate % (Pre-seed)", 0.0, 1.0, 0.2, 0.01),
+                    "small_win_rate": st.slider("Small Win Rate % (Pre-seed)", 0.0, 1.0, 0.15, 0.01),
+                    "medium_win_rate": st.slider("Medium Win Rate % (Pre-seed)", 0.0, 1.0, 0.04, 0.01),
+                    "large_win_rate": st.slider("Large Win Rate % (Pre-seed)", 0.0, 1.0, 0.01, 0.01),
+                    "small_win_multiple": st.number_input("Small Win Multiple (Pre-seed)", min_value=1.0, value=4.0, step=1.0),
+                    "medium_win_multiple": st.number_input("Medium Win Multiple (Pre-seed)", min_value=1.0, value=15.0, step=1.0),
+                    "large_win_multiple": st.number_input("Large Win Multiple (Pre-seed)", min_value=1.0, value=100.0, step=1.0)
                 }
                 # Calculate total and display with color
                 preseed_total = sum([preseed_params[k] for k in ["loss_rate", "sideways_rate", "small_win_rate", "medium_win_rate", "large_win_rate"]])
@@ -542,14 +542,14 @@ def main():
             with col2:
                 st.subheader("Seed Stage Parameters")
                 seed_params = {
-                    "loss_rate": st.slider("Loss Rate (Seed)", 0.0, 1.0, 0.4, 0.01),
-                    "sideways_rate": st.slider("Sideways Rate (Seed)", 0.0, 1.0, 0.3, 0.01),
-                    "small_win_rate": st.slider("Small Win Rate (Seed)", 0.0, 1.0, 0.2, 0.01),
-                    "medium_win_rate": st.slider("Medium Win Rate (Seed)", 0.0, 1.0, 0.09, 0.01),
-                    "large_win_rate": st.slider("Large Win Rate (Seed)", 0.0, 1.0, 0.01, 0.01),
-                    "small_win_multiple": st.number_input("Small Win Multiple (Seed)", min_value=1.0, value=3.0),
-                    "medium_win_multiple": st.number_input("Medium Win Multiple (Seed)", min_value=1.0, value=10.0),
-                    "large_win_multiple": st.number_input("Large Win Multiple (Seed)", min_value=1.0, value=70.0)
+                    "loss_rate": st.slider("Loss Rate % (Seed)", 0.0, 1.0, 0.5, 0.01),
+                    "sideways_rate": st.slider("Sideways Rate % (Seed)", 0.0, 1.0, 0.3, 0.01),
+                    "small_win_rate": st.slider("Small Win Rate % (Seed)", 0.0, 1.0, 0.1, 0.01),
+                    "medium_win_rate": st.slider("Medium Win Rate % (Seed)", 0.0, 1.0, 0.08, 0.01),
+                    "large_win_rate": st.slider("Large Win Rate % (Seed)", 0.0, 1.0, 0.02, 0.01),
+                    "small_win_multiple": st.number_input("Small Win Multiple (Seed)", min_value=1.0, value=3.0, step=1.0),
+                    "medium_win_multiple": st.number_input("Medium Win Multiple (Seed)", min_value=1.0, value=10.0, step=1.0),
+                    "large_win_multiple": st.number_input("Large Win Multiple (Seed)", min_value=1.0, value=70.0, step=1.0)
                 }
                 # Calculate total and display with color
                 seed_total = sum([seed_params[k] for k in ["loss_rate", "sideways_rate", "small_win_rate", "medium_win_rate", "large_win_rate"]])
@@ -559,14 +559,14 @@ def main():
             with col3:
                 st.subheader("Series A Parameters")
                 series_a_params = {
-                    "loss_rate": st.slider("Loss Rate (Series A)", 0.0, 1.0, 0.3, 0.01),
-                    "sideways_rate": st.slider("Sideways Rate (Series A)", 0.0, 1.0, 0.35, 0.01),
-                    "small_win_rate": st.slider("Small Win Rate (Series A)", 0.0, 1.0, 0.25, 0.01),
-                    "medium_win_rate": st.slider("Medium Win Rate (Series A)", 0.0, 1.0, 0.09, 0.01),
-                    "large_win_rate": st.slider("Large Win Rate (Series A)", 0.0, 1.0, 0.01, 0.01),
-                    "small_win_multiple": st.number_input("Small Win Multiple (Series A)", min_value=1.0, value=2.5),
-                    "medium_win_multiple": st.number_input("Medium Win Multiple (Series A)", min_value=1.0, value=8.0),
-                    "large_win_multiple": st.number_input("Large Win Multiple (Series A)", min_value=1.0, value=30.0)
+                    "loss_rate": st.slider("Loss Rate % (Series A)", 0.0, 1.0, 0.4, 0.01),
+                    "sideways_rate": st.slider("Sideways Rate % (Series A)", 0.0, 1.0, 0.3, 0.01),
+                    "small_win_rate": st.slider("Small Win Rate % (Series A)", 0.0, 1.0, 0.2, 0.01),
+                    "medium_win_rate": st.slider("Medium Win Rate % (Series A)", 0.0, 1.0, 0.08, 0.01),
+                    "large_win_rate": st.slider("Large Win Rate % (Series A)", 0.0, 1.0, 0.02, 0.01),
+                    "small_win_multiple": st.number_input("Small Win Multiple (Series A)", min_value=1.0, value=2.5, step=1.0),
+                    "medium_win_multiple": st.number_input("Medium Win Multiple (Series A)", min_value=1.0, value=8.0, step=1.0),
+                    "large_win_multiple": st.number_input("Large Win Multiple (Series A)", min_value=1.0, value=30.0, step=1.0)
                 }
                 # Calculate total and display with color
                 series_a_total = sum([series_a_params[k] for k in ["loss_rate", "sideways_rate", "small_win_rate", "medium_win_rate", "large_win_rate"]])
@@ -576,14 +576,14 @@ def main():
             with col4:
                 st.subheader("Series B Parameters")
                 series_b_params = {
-                    "loss_rate": st.slider("Loss Rate (Series B)", 0.0, 1.0, 0.2, 0.01),
-                    "sideways_rate": st.slider("Sideways Rate (Series B)", 0.0, 1.0, 0.4, 0.01),
-                    "small_win_rate": st.slider("Small Win Rate (Series B)", 0.0, 1.0, 0.3, 0.01),
-                    "medium_win_rate": st.slider("Medium Win Rate (Series B)", 0.0, 1.0, 0.09, 0.01),
-                    "large_win_rate": st.slider("Large Win Rate (Series B)", 0.0, 1.0, 0.01, 0.01),
-                    "small_win_multiple": st.number_input("Small Win Multiple (Series B)", min_value=1.0, value=2.0),
-                    "medium_win_multiple": st.number_input("Medium Win Multiple (Series B)", min_value=1.0, value=5.0),
-                    "large_win_multiple": st.number_input("Large Win Multiple (Series B)", min_value=1.0, value=10.0)
+                    "loss_rate": st.slider("Loss Rate % (Series B)", 0.0, 1.0, 0.3, 0.01),
+                    "sideways_rate": st.slider("Sideways Rate % (Series B)", 0.0, 1.0, 0.4, 0.01),
+                    "small_win_rate": st.slider("Small Win Rate % (Series B)", 0.0, 1.0, 0.2, 0.01),
+                    "medium_win_rate": st.slider("Medium Win Rate % (Series B)", 0.0, 1.0, 0.08, 0.01),
+                    "large_win_rate": st.slider("Large Win Rate % (Series B)", 0.0, 1.0, 0.02, 0.01),
+                    "small_win_multiple": st.number_input("Small Win Multiple (Series B)", min_value=1.0, value=2.0, step=1.0),
+                    "medium_win_multiple": st.number_input("Medium Win Multiple (Series B)", min_value=1.0, value=5.0, step=1.0),
+                    "large_win_multiple": st.number_input("Large Win Multiple (Series B)", min_value=1.0, value=10.0, step=1.0)
                 }    
                 # Calculate total and display with color
                 series_b_total = sum([series_b_params[k] for k in ["loss_rate", "sideways_rate", "small_win_rate", "medium_win_rate", "large_win_rate"]])
@@ -645,11 +645,12 @@ def main():
                 success_rate = np.mean(results >= 4.0) * 100
                 st.metric("Probability of Achieving 4.0x MOIC", f"{success_rate:.1f}%")
 
+                portfolio_values = [total_capital * result for result in results]
                 results_df = pd.DataFrame({
                     'simulation': range(1, len(results) + 1),
                     'moic': results,
                     'achieved_target': results >= 4.0,
-                    'portfolio_value': results * total_capital,
+                    'portfolio_value': portfolio_values,
                     'num_companies': num_companies,
                     'total_investments': [count['total_investments'] for count in investment_counts],
                     'total_followons': [count['total_followons'] for count in investment_counts]
@@ -709,14 +710,71 @@ def main():
                     )
                     st.markdown(f"Summary results: {len(summary_df):,} rows × {len(summary_df.columns)} columns")
                 
-                # Display sample of results
                 st.markdown("### Sample of Detailed Results")
                 st.dataframe(results_df.head())    
 
-        
+                # Create violin plot for follow-on investment impact
+                st.markdown("### Follow-on Investment Impact Analysis")
+                
+                followon_data = pd.DataFrame({
+                    'MOIC': results,
+                    'Number of Follow-ons': [count['total_followons'] for count in investment_counts]
+                })
+                
+                # Convert follow-on counts to categorical for better visualization
+                followon_data['Number of Follow-ons'] = followon_data['Number of Follow-ons'].astype(str) + ' Follow-ons'
+                
+                fig_violin = px.violin(
+                    followon_data,
+                    x='Number of Follow-ons',
+                    y='MOIC',
+                    box=True,  # Add box plot inside violin
+                    points="all",  # Show all points
+                    hover_data={'MOIC': ':.2f'},
+                    labels={
+                        'MOIC': 'Multiple on Invested Capital (MOIC)',
+                        'Number of Follow-ons': 'Number of Follow-on Investments'
+                    }
+                )
+                
+                fig_violin.update_layout(
+                    title='MOIC Distribution by Number of Follow-on Investments',
+                    height=500,
+                    showlegend=False
+                )
+                
+                # Add mean MOIC line for reference
+                mean_moic = followon_data['MOIC'].mean()
+                fig_violin.add_hline(
+                    y=mean_moic,
+                    line_dash="dash",
+                    line_color="red",
+                    annotation_text=f"Mean MOIC: {mean_moic:.2f}x",
+                    annotation_position="top right"
+                )
+                
+                # Add target MOIC line
+                fig_violin.add_hline(
+                    y=4.0,
+                    line_dash="dash",
+                    line_color="green",
+                    annotation_text="Target MOIC: 4.0x",
+                    annotation_position="top left"
+                )
+                
+                st.plotly_chart(fig_violin, use_container_width=True)
+                
+                # Add statistical summary
+                st.markdown("#### Statistical Summary by Follow-on Count")
+                stats_summary = followon_data.groupby('Number of Follow-ons').agg({
+                    'MOIC': ['count', 'mean', 'std', 'min', 'max']
+                }).round(2)
+                stats_summary.columns = ['Count', 'Mean MOIC', 'Std Dev', 'Min MOIC', 'Max MOIC']
+                st.dataframe(stats_summary)
+
         with tab2:
             st.header("Power Law Model")
-            st.caption("Please see Jerry Neumann's post on Powerlaws in Venture here: https://reactionwheel.net/2015/06/power-laws-in-venture.html.")
+            st.caption("The power law can be used to describe a phenomenon where a small number of items is clustered at the top of a distribution (or at the bottom). Please see Jerry Neumann's post on Powerlaws in Venture here: https://reactionwheel.net/2015/06/power-laws-in-venture.html.")
             
             col1, col2, col3, col4 = st.columns(4)
             
@@ -803,11 +861,12 @@ def main():
                 success_rate = np.mean(results >= 4.0) * 100
                 st.metric("Probability of Achieving 4.0x MOIC", f"{success_rate:.1f}%")
 
+                portfolio_values = [total_capital * result for result in results]
                 results_df = pd.DataFrame({
                     'simulation': range(1, len(results) + 1),
                     'moic': results,
                     'achieved_target': results >= 4.0,
-                    'portfolio_value': results * total_capital,
+                    'portfolio_value': portfolio_values,
                     'num_companies': num_companies,
                     'total_capital': total_capital,
                     'total_investments': [count['total_investments'] for count in investment_counts],
@@ -868,9 +927,67 @@ def main():
                     )
                     st.markdown(f"Summary results: {len(summary_df):,} rows × {len(summary_df.columns)} columns")
                 
-                # Display sample of results
                 st.markdown("### Sample of Detailed Results")
                 st.dataframe(results_df.head())    
+
+                # Create violin plot for follow-on investment impact
+                st.markdown("### Follow-on Investment Impact Analysis")
+                
+                followon_data = pd.DataFrame({
+                    'MOIC': results,
+                    'Number of Follow-ons': [count['total_followons'] for count in investment_counts]
+                })
+                
+                # Convert follow-on counts to categorical for better visualization
+                followon_data['Number of Follow-ons'] = followon_data['Number of Follow-ons'].astype(str) + ' Follow-ons'
+                
+                fig_violin = px.violin(
+                    followon_data,
+                    x='Number of Follow-ons',
+                    y='MOIC',
+                    box=True,  # Add box plot inside violin
+                    points="all",  # Show all points
+                    hover_data={'MOIC': ':.2f'},
+                    labels={
+                        'MOIC': 'Multiple on Invested Capital (MOIC)',
+                        'Number of Follow-ons': 'Number of Follow-on Investments'
+                    }
+                )
+                
+                fig_violin.update_layout(
+                    title='MOIC Distribution by Number of Follow-on Investments',
+                    height=500,
+                    showlegend=False
+                )
+                
+                # Add mean MOIC line for reference
+                mean_moic = followon_data['MOIC'].mean()
+                fig_violin.add_hline(
+                    y=mean_moic,
+                    line_dash="dash",
+                    line_color="red",
+                    annotation_text=f"Mean MOIC: {mean_moic:.2f}x",
+                    annotation_position="top right"
+                )
+                
+                # Add target MOIC line
+                fig_violin.add_hline(
+                    y=4.0,
+                    line_dash="dash",
+                    line_color="green",
+                    annotation_text="Target MOIC: 4.0x",
+                    annotation_position="top left"
+                )
+                
+                st.plotly_chart(fig_violin, use_container_width=True)
+                
+                # Add statistical summary
+                st.markdown("#### Statistical Summary by Follow-on Count")
+                stats_summary = followon_data.groupby('Number of Follow-ons').agg({
+                    'MOIC': ['count', 'mean', 'std', 'min', 'max']
+                }).round(2)
+                stats_summary.columns = ['Count', 'Mean MOIC', 'Std Dev', 'Min MOIC', 'Max MOIC']
+                st.dataframe(stats_summary)
     else:
         st.warning("Please adjust stage allocations to total 100% before running simulations")            
 if __name__ == "__main__":
