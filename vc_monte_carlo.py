@@ -334,6 +334,7 @@ class VCSimulator:
 def main():
     st.set_page_config(layout="wide")
     st.title("VC Portfolio Monte Carlo Simulator")
+    st.caption("This application is designed to test your venture capital portfolio assumptions. Below you will find two different models, Discrete and Powerlaw. Discrete relies on your assumptions, e.g., what is a 'win' at pre-seed and how much should that return. The Powerlaw model is perhaps more accurate in the real world.")
     
     # Sidebar for common parameters
     st.sidebar.header("Portfolio Parameters")
@@ -350,7 +351,7 @@ def main():
     followon_reserve = total_capital * (followon_reserve_pct/100)
 #
     min_investment = st.sidebar.number_input("Minimum Investment", min_value=1, value=250000, step=50000)
-    max_investment = st.sidebar.number_input("Maximum Investment", min_value=1, value=3000000, step=100000)
+    max_investment = st.sidebar.number_input("Maximum Investment", min_value=1, value=500000, step=50000)
     num_simulations = st.sidebar.number_input("Number of Simulations", min_value=100, value=1000, step=100)
     
     # Existing investments section
@@ -379,7 +380,7 @@ def main():
             "Seed Allocation (%)", 
             min_value=0, 
             max_value=100, 
-            value=30,
+            value=50,
             step=5,
             key="seed_alloc"
         )
@@ -388,7 +389,7 @@ def main():
             "Series A Allocation (%)", 
             min_value=0, 
             max_value=100, 
-            value=20,
+            value=0,
             step=5,
             key="series_a_alloc"
         )
@@ -406,6 +407,7 @@ def main():
     
     # After stage allocation, add follow-on section
     st.header("Follow-on Strategy")
+    st.caption("If you selected 0 for % of Total Capital Reserved for Follow-ons (on the left), you can ignore this section.")
     st.markdown(f"Reserved for follow-ons: ${followon_reserve:,.0f}")
     follow_col1, follow_col2 = st.columns(2)
     
@@ -517,19 +519,20 @@ def main():
     
         with tab1:
             st.header("Discrete Outcome Model")
+            st.caption("Below you can define the loss rates and win rates by stage. Each group of sliders must sum to 100% (at the bottom) to run the simulation. Under the sliders you can define the win rates by stage, e.g., a small win at pre-seed is 4.0x.")
             col1, col2, col3, col4 = st.columns(4)
             
             with col1:
                 st.subheader("Pre-seed Parameters")
                 preseed_params = {
-                    "loss_rate": st.slider("Loss Rate (Pre-seed)", 0.0, 1.0, 0.5, 0.05),
-                    "sideways_rate": st.slider("Sideways Rate (Pre-seed)", 0.0, 1.0, 0.25, 0.05),
-                    "small_win_rate": st.slider("Small Win Rate (Pre-seed)", 0.0, 1.0, 0.15, 0.05),
-                    "medium_win_rate": st.slider("Medium Win Rate (Pre-seed)", 0.0, 1.0, 0.08, 0.02),
-                    "large_win_rate": st.slider("Large Win Rate (Pre-seed)", 0.0, 1.0, 0.02, 0.01),
+                    "loss_rate": st.slider("Loss Rate (Pre-seed)", 0.0, 1.0, 0.5, 0.01),
+                    "sideways_rate": st.slider("Sideways Rate (Pre-seed)", 0.0, 1.0, 0.25, 0.01),
+                    "small_win_rate": st.slider("Small Win Rate (Pre-seed)", 0.0, 1.0, 0.15, 0.01),
+                    "medium_win_rate": st.slider("Medium Win Rate (Pre-seed)", 0.0, 1.0, 0.09, 0.01),
+                    "large_win_rate": st.slider("Large Win Rate (Pre-seed)", 0.0, 1.0, 0.01, 0.01),
                     "small_win_multiple": st.number_input("Small Win Multiple (Pre-seed)", min_value=1.0, value=4.0),
                     "medium_win_multiple": st.number_input("Medium Win Multiple (Pre-seed)", min_value=1.0, value=15.0),
-                    "large_win_multiple": st.number_input("Large Win Multiple (Pre-seed)", min_value=1.0, value=70.0)
+                    "large_win_multiple": st.number_input("Large Win Multiple (Pre-seed)", min_value=1.0, value=100.0)
                 }
                 # Calculate total and display with color
                 preseed_total = sum([preseed_params[k] for k in ["loss_rate", "sideways_rate", "small_win_rate", "medium_win_rate", "large_win_rate"]])
@@ -539,14 +542,14 @@ def main():
             with col2:
                 st.subheader("Seed Stage Parameters")
                 seed_params = {
-                    "loss_rate": st.slider("Loss Rate (Seed)", 0.0, 1.0, 0.4, 0.05),
-                    "sideways_rate": st.slider("Sideways Rate (Seed)", 0.0, 1.0, 0.3, 0.05),
-                    "small_win_rate": st.slider("Small Win Rate (Seed)", 0.0, 1.0, 0.2, 0.05),
-                    "medium_win_rate": st.slider("Medium Win Rate (Seed)", 0.0, 1.0, 0.08, 0.02),
-                    "large_win_rate": st.slider("Large Win Rate (Seed)", 0.0, 1.0, 0.02, 0.01),
+                    "loss_rate": st.slider("Loss Rate (Seed)", 0.0, 1.0, 0.4, 0.01),
+                    "sideways_rate": st.slider("Sideways Rate (Seed)", 0.0, 1.0, 0.3, 0.01),
+                    "small_win_rate": st.slider("Small Win Rate (Seed)", 0.0, 1.0, 0.2, 0.01),
+                    "medium_win_rate": st.slider("Medium Win Rate (Seed)", 0.0, 1.0, 0.09, 0.01),
+                    "large_win_rate": st.slider("Large Win Rate (Seed)", 0.0, 1.0, 0.01, 0.01),
                     "small_win_multiple": st.number_input("Small Win Multiple (Seed)", min_value=1.0, value=3.0),
                     "medium_win_multiple": st.number_input("Medium Win Multiple (Seed)", min_value=1.0, value=10.0),
-                    "large_win_multiple": st.number_input("Large Win Multiple (Seed)", min_value=1.0, value=50.0)
+                    "large_win_multiple": st.number_input("Large Win Multiple (Seed)", min_value=1.0, value=70.0)
                 }
                 # Calculate total and display with color
                 seed_total = sum([seed_params[k] for k in ["loss_rate", "sideways_rate", "small_win_rate", "medium_win_rate", "large_win_rate"]])
@@ -556,11 +559,11 @@ def main():
             with col3:
                 st.subheader("Series A Parameters")
                 series_a_params = {
-                    "loss_rate": st.slider("Loss Rate (Series A)", 0.0, 1.0, 0.3, 0.05),
-                    "sideways_rate": st.slider("Sideways Rate (Series A)", 0.0, 1.0, 0.35, 0.05),
-                    "small_win_rate": st.slider("Small Win Rate (Series A)", 0.0, 1.0, 0.25, 0.05),
-                    "medium_win_rate": st.slider("Medium Win Rate (Series A)", 0.0, 1.0, 0.08, 0.02),
-                    "large_win_rate": st.slider("Large Win Rate (Series A)", 0.0, 1.0, 0.02, 0.01),
+                    "loss_rate": st.slider("Loss Rate (Series A)", 0.0, 1.0, 0.3, 0.01),
+                    "sideways_rate": st.slider("Sideways Rate (Series A)", 0.0, 1.0, 0.35, 0.01),
+                    "small_win_rate": st.slider("Small Win Rate (Series A)", 0.0, 1.0, 0.25, 0.01),
+                    "medium_win_rate": st.slider("Medium Win Rate (Series A)", 0.0, 1.0, 0.09, 0.01),
+                    "large_win_rate": st.slider("Large Win Rate (Series A)", 0.0, 1.0, 0.01, 0.01),
                     "small_win_multiple": st.number_input("Small Win Multiple (Series A)", min_value=1.0, value=2.5),
                     "medium_win_multiple": st.number_input("Medium Win Multiple (Series A)", min_value=1.0, value=8.0),
                     "large_win_multiple": st.number_input("Large Win Multiple (Series A)", min_value=1.0, value=30.0)
@@ -573,11 +576,11 @@ def main():
             with col4:
                 st.subheader("Series B Parameters")
                 series_b_params = {
-                    "loss_rate": st.slider("Loss Rate (Series B)", 0.0, 1.0, 0.2, 0.05),
-                    "sideways_rate": st.slider("Sideways Rate (Series B)", 0.0, 1.0, 0.4, 0.05),
-                    "small_win_rate": st.slider("Small Win Rate (Series B)", 0.0, 1.0, 0.3, 0.05),
-                    "medium_win_rate": st.slider("Medium Win Rate (Series B)", 0.0, 1.0, 0.08, 0.02),
-                    "large_win_rate": st.slider("Large Win Rate (Series B)", 0.0, 1.0, 0.02, 0.01),
+                    "loss_rate": st.slider("Loss Rate (Series B)", 0.0, 1.0, 0.2, 0.01),
+                    "sideways_rate": st.slider("Sideways Rate (Series B)", 0.0, 1.0, 0.4, 0.01),
+                    "small_win_rate": st.slider("Small Win Rate (Series B)", 0.0, 1.0, 0.3, 0.01),
+                    "medium_win_rate": st.slider("Medium Win Rate (Series B)", 0.0, 1.0, 0.09, 0.01),
+                    "large_win_rate": st.slider("Large Win Rate (Series B)", 0.0, 1.0, 0.01, 0.01),
                     "small_win_multiple": st.number_input("Small Win Multiple (Series B)", min_value=1.0, value=2.0),
                     "medium_win_multiple": st.number_input("Medium Win Multiple (Series B)", min_value=1.0, value=5.0),
                     "large_win_multiple": st.number_input("Large Win Multiple (Series B)", min_value=1.0, value=10.0)
@@ -713,6 +716,7 @@ def main():
         
         with tab2:
             st.header("Power Law Model")
+            st.caption("Please see Jerry Neumann's post on Powerlaws in Venture here: https://reactionwheel.net/2015/06/power-laws-in-venture.html.")
             
             col1, col2, col3, col4 = st.columns(4)
             
